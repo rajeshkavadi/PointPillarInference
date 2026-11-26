@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PointPillars · Live 3D View</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <div class="brand-text">
+          <strong>POINTPILLARS<span>VIEW</span></strong>
+          <small>CPU · three.js · no RViz</small>
+        </div>
+      </div>
+      <div class="pills">
+        <span class="pill" id="pill-ws"><i></i><span>WS</span></span>
+        <span class="pill">frame <b id="pill-frame">—</b></span>
+        <span class="pill"><b id="pill-points">0</b> pts</span>
+        <span class="pill"><b id="pill-map">0</b> map pts</span>
+        <span class="pill"><b id="pill-boxes">0</b> boxes</span>
+        <span class="pill"><b id="pill-infer">—</b> ms</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="group">
+        <label>Colour
+          <select id="color-mode">
+            <option value="distance" selected>Distance</option>
+            <option value="height">Height (Z)</option>
+            <option value="intensity">Intensity</option>
+          </select>
+        </label>
+        <label>Points
+          <select id="max-points">
+            <option value="60000">60k</option>
+            <option value="120000">120k</option>
+            <option value="250000" selected>250k</option>
+            <option value="0">All</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="show-rings" checked> Radar rings</label>
+        <label class="check"><input type="checkbox" id="show-labels" checked> Box labels</label>
+        <label class="check"><input type="checkbox" id="show-map" checked> Map layer</label>
+        <label class="check"><input type="checkbox" id="follow" checked> Follow sensor</label>
+      </div>
+      <div class="group views">
+        <button class="btn" id="recenter" title="Put the LiDAR back in the centre">RECENTER</button>
+        <button class="btn active" data-view="top">TOP</button>
+        <button class="btn" data-view="iso">3D</button>
+        <button class="btn" data-view="front">FRONT</button>
+      </div>
+    </div>
+
+    <main class="stage" id="stage">
+      <canvas id="view"></canvas>
+
+      <div class="hud tl">
+        <div class="readout" id="view-title">TOP · RANGE</div>
+        <div class="sub" id="view-sub">5 m rings to 70 m</div>
+      </div>
+
+      <div class="hud tr">
+        <span class="hud-stat"><b id="hud-fps">0.0</b> fps</span>
+        <span class="hud-stat"><b id="hud-points">0</b> pts</span>
+        <span class="hud-stat"><b id="hud-map">0</b> map pts</span>
+        <span class="hud-stat"><b id="hud-boxes">0</b> boxes</span>
+        <span class="hud-stat"><i class="dot" id="hud-dot"></i><span id="hud-ws">waiting</span></span>
+      </div>
+
+      <div class="hud bl" id="legend">
+        <div class="legend-head">
+          <span id="legend-title">RANGE</span>
+          <span id="legend-max">0 m</span>
+        </div>
+        <div class="legend-bar" id="legend-bar"></div>
+        <div class="legend-range"><span id="legend-min">0 m</span><span id="legend-mid">—</span></div>
+      </div>
+
+      <div class="hud br hint">Drag rotate · Wheel zoom · Right-drag pan · RECENTER re-centres the LiDAR</div>
+
+      <div class="overlay" id="overlay">
+        <div class="spinner"></div>
+        <p>Waiting for the first LiDAR frame…</p>
+        <small>Start the viewer with a bag or <code>--ros</code> mode.</small>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/vendor/three.min.js"></script>
+  <script src="/static/vendor/OrbitControls.js"></script>
+  <script src="/static/js/viewer.js"></script>
+</body>
+</html>

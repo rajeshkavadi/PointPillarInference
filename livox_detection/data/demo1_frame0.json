@@ -1,0 +1,13 @@
+{
+  "fields": [
+    "x",
+    "y",
+    "z",
+    "rgb"
+  ],
+  "frame_id": "livox_frame",
+  "has_intensity": false,
+  "index": 0,
+  "stamp": 1606361960.9842198,
+  "topic": "/livox/lidar"
+}

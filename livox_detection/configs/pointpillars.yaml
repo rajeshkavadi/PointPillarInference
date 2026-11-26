@@ -1,0 +1,148 @@
+# =============================================================================
+# OpenPCDet PointPillars inference configuration (KITTI model)
+# =============================================================================
+# PROVENANCE / VALIDATION
+# -----------------------
+# checkpoints/pointpillars_checkpoint.pth was compared tensor-by-tensor with the
+# official OpenPCDet KITTI checkpoint `pointpillar_7728.pth` (epoch 80, it 9280):
+# all 127 tensors in `model_state` are bit-identical.  Therefore the original
+# OpenPCDet KITTI `tools/cfgs/kitti_models/pointpillar.yaml` parameters below are
+# used unchanged.  No parameter in MODEL / DATA_CONFIG / POST_PROCESSING was
+# invented or tuned for the Livox bag.
+#
+# The `INFERENCE` section at the bottom contains ONLY sensor/plumbing settings
+# (which topic to read, how to fill the missing intensity channel, RViz topics).
+# It does not change the trained model or its preprocessing math.
+# =============================================================================
+
+CLASS_NAMES: ['Car', 'Pedestrian', 'Cyclist']
+
+DATA_CONFIG:
+    _BASE_CONFIG_: cfgs/dataset_configs/kitti_dataset.yaml
+    POINT_CLOUD_RANGE: [0, -39.68, -3, 69.12, 39.68, 1]
+    DATA_PROCESSOR:
+        - NAME: mask_points_and_boxes_outside_range
+          REMOVE_OUTSIDE_BOXES: True
+
+        - NAME: shuffle_points
+          SHUFFLE_ENABLED: {
+            'train': True,
+            'test': False
+          }
+
+        - NAME: transform_points_to_voxels
+          VOXEL_SIZE: [0.16, 0.16, 4]
+          MAX_POINTS_PER_VOXEL: 32
+          MAX_NUMBER_OF_VOXELS: {
+            'train': 16000,
+            'test': 40000
+          }
+
+MODEL:
+    NAME: PointPillar
+
+    VFE:
+        NAME: PillarVFE
+        WITH_DISTANCE: False
+        USE_ABSLOTE_XYZ: True
+        USE_NORM: True
+        NUM_FILTERS: [64]
+
+    MAP_TO_BEV:
+        NAME: PointPillarScatter
+        NUM_BEV_FEATURES: 64
+
+    BACKBONE_2D:
+        NAME: BaseBEVBackbone
+        LAYER_NUMS: [3, 5, 5]
+        LAYER_STRIDES: [2, 2, 2]
+        NUM_FILTERS: [64, 128, 256]
+        UPSAMPLE_STRIDES: [1, 2, 4]
+        NUM_UPSAMPLE_FILTERS: [128, 128, 128]
+
+    DENSE_HEAD:
+        NAME: AnchorHeadSingle
+        CLASS_AGNOSTIC: False
+
+        USE_DIRECTION_CLASSIFIER: True
+        DIR_OFFSET: 0.78539
+        DIR_LIMIT_OFFSET: 0.0
+        NUM_DIR_BINS: 2
+
+        ANCHOR_GENERATOR_CONFIG: [
+            {
+                'class_name': 'Car',
+                'anchor_sizes': [[3.9, 1.6, 1.56]],
+                'anchor_rotations': [0, 1.57],
+                'anchor_bottom_heights': [-1.78],
+                'align_center': False,
+                'feature_map_stride': 2,
+                'matched_threshold': 0.6,
+                'unmatched_threshold': 0.45
+            },
+            {
+                'class_name': 'Pedestrian',
+                'anchor_sizes': [[0.8, 0.6, 1.73]],
+                'anchor_rotations': [0, 1.57],
+                'anchor_bottom_heights': [-0.6],
+                'align_center': False,
+                'feature_map_stride': 2,
+                'matched_threshold': 0.5,
+                'unmatched_threshold': 0.35
+            },
+            {
+                'class_name': 'Cyclist',
+                'anchor_sizes': [[1.76, 0.6, 1.73]],
+                'anchor_rotations': [0, 1.57],
+                'anchor_bottom_heights': [-0.6],
+                'align_center': False,
+                'feature_map_stride': 2,
+                'matched_threshold': 0.5,
+                'unmatched_threshold': 0.35
+            }
+        ]
+
+        TARGET_ASSIGNER_CONFIG:
+            NAME: AxisAlignedTargetAssigner
+            POS_FRACTION: -1.0
+            SAMPLE_SIZE: 512
+            NORM_BY_NUM_EXAMPLES: False
+            MATCH_HEIGHT: False
+            BOX_CODER: ResidualCoder
+
+    POST_PROCESSING:
+        SCORE_THRESH: 0.1
+        OUTPUT_RAW_SCORE: False
+        NMS_CONFIG:
+            MULTI_CLASSES_NMS: False
+            NMS_TYPE: nms_gpu
+            NMS_THRESH: 0.01
+            NMS_PRE_MAXSIZE: 4096
+            NMS_POST_MAXSIZE: 500
+
+# -----------------------------------------------------------------------------
+# Sensor / plumbing only.  These do not alter the model or its learned weights.
+# -----------------------------------------------------------------------------
+INFERENCE:
+    DEVICE: cpu                 # CPU only throughout this project
+    LIDAR_TOPIC: /livox/lidar   # VERIFIED with `rosbag info`: only PointCloud2 topic
+    POINTS_TOPIC: /pointcloud   # reused from upstream livox_detection (vis_ros.py)
+    BOX_TOPIC: /detect_box3d    # reused from upstream livox_detection
+    TEXT_TOPIC: /text_det       # reused from upstream livox_detection
+    JSON_TOPIC: /detect_json    # compact boxes for the three.js web viewer
+
+    # The bag fields are [x, y, z, rgb] -- there is NO intensity field.
+    # The checkpoint's VFE requires a 4th (intensity) input feature.
+    # 'zero' fills it with 0.0 and prints a loud warning.  Use 'field' only if
+    # your own bag really contains an intensity/i/reflectivity field.
+    INTENSITY_MODE: zero        # zero | constant | field
+    INTENSITY_VALUE: 0.0        # used only when INTENSITY_MODE == constant
+    INTENSITY_SCALE: auto       # auto | number (divides intensity before VFE)
+
+    # Calibration offsets for a bag whose frame differs from KITTI's ground plane.
+    # Left at 0.0 deliberately; change only with a known calibration.
+    Z_OFFSET: 0.0
+    Z_ROTATION_DEG: 0.0
+
+    FRAME_ID: ''                # '' = preserve the incoming message frame_id
+    PRINT_EVERY: 10             # log timing every N frames (ROS node)

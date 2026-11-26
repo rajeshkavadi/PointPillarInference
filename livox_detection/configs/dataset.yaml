@@ -1,0 +1,47 @@
+# Original OpenPCDet KITTI dataset configuration (tools/cfgs/dataset_configs/
+# kitti_dataset.yaml at commit 233f849).  Included for reference/compatibility;
+# the values that affect inference are already present in pointpillars.yaml.
+# This project does NOT use OpenPCDet dataset loaders -- no spconv or CUDA ops.
+
+DATASET: 'KittiDataset'
+DATA_PATH: '../data/kitti'
+
+POINT_CLOUD_RANGE: [0, -40, -3, 70.4, 40, 1]
+
+DATA_SPLIT: {
+    'train': train,
+    'test': val
+}
+
+INFO_PATH: {
+    'train': [kitti_infos_train.pkl],
+    'test': [kitti_infos_val.pkl],
+}
+
+GET_ITEM_LIST: ["points"]
+FOV_POINTS_ONLY: True
+
+POINT_FEATURE_ENCODING: {
+    encoding_type: absolute_coordinates_encoding,
+    used_feature_list: ['x', 'y', 'z', 'intensity'],
+    src_feature_list: ['x', 'y', 'z', 'intensity'],
+}
+
+# The model configuration overrides this with [0, -39.68, -3, 69.12, 39.68, 1].
+DATA_PROCESSOR:
+    - NAME: mask_points_and_boxes_outside_range
+      REMOVE_OUTSIDE_BOXES: True
+
+    - NAME: shuffle_points
+      SHUFFLE_ENABLED: {
+        'train': True,
+        'test': False
+      }
+
+    - NAME: transform_points_to_voxels
+      VOXEL_SIZE: [0.05, 0.05, 0.1]
+      MAX_POINTS_PER_VOXEL: 5
+      MAX_NUMBER_OF_VOXELS: {
+        'train': 16000,
+        'test': 40000
+      }

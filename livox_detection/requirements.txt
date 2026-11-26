@@ -1,0 +1,19 @@
+# CPU-only runtime.  Install torch from the CPU wheel index (no CUDA):
+#   python3 -m pip install -r requirements.txt \
+#     --extra-index-url https://download.pytorch.org/whl/cpu
+#
+# Minimum versions are used so this also installs on newer Python releases.
+# The versions verified on Ubuntu 18.04 / Python 3.6.9 were:
+#   torch 1.10.2+cpu, numpy 1.19.5, PyYAML 3.12
+torch>=1.10
+numpy>=1.19
+PyYAML>=3.12
+
+# Python3 imports for ROS Melodic's rosbag/rospkg (rospy itself comes from apt).
+# Only needed to read .bag files; the web viewer and ROS node do not use them.
+rospkg==1.6.3
+pycryptodomex==3.21.0
+python-gnupg==0.5.7
+
+# Optional: used only to re-download the official checkpoint for validation.
+gdown==4.7.3

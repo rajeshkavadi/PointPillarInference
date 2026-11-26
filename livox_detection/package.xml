@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>livox_detection</name>
+  <version>0.1.0</version>
+  <description>CPU-only OpenPCDet PointPillars inference for Livox ROS1 bags</description>
+  <maintainer email="rajesh@example.com">Rajesh</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>rosbag</exec_depend>
+  <exec_depend>rospkg</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>rviz</exec_depend>
+
+  <export>
+  </export>
+</package>
